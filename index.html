@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Animiertes Voting Diagramm</title>
+<title>Voting Bar Chart</title>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
 
@@ -11,10 +12,9 @@ body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #3b1f1f, #7a4a1c, #b08d2a);
     color: white;
-    overflow-x: hidden;
 }
 
-/* STARTMENÜ */
+/* MENU */
 #menu {
     display: flex;
     flex-direction: column;
@@ -33,12 +33,7 @@ input, button {
 button {
     cursor: pointer;
     background: gold;
-    color: black;
     font-weight: bold;
-}
-
-button:hover {
-    transform: scale(1.05);
 }
 
 #list {
@@ -52,51 +47,84 @@ button:hover {
     margin: 5px;
     border-radius: 8px;
     cursor: pointer;
-    display: flex;
-    justify-content: space-between;
 }
 
-/* DIAGRAMM */
-#chartContainer {
+/* CHART */
+#chartWrapper {
     display: none;
-    padding: 20px;
+    padding: 30px;
 }
 
-.barRow {
+#chartArea {
     display: flex;
-    align-items: center;
-    margin: 10px 0;
 }
 
-.name {
-    width: 120px;
+/* Y AXIS (NAMES) */
+#yAxis {
+    width: 140px;
+}
+
+.yItem {
+    height: 30px;
+    display: flex;
+    align-items: flex-end;
+    margin: 5px 0;
+}
+
+/* CHART GRID */
+#chart {
+    position: relative;
+    flex: 1;
+    height: 400px;
+    border-left: 2px solid rgba(255,255,255,0.4);
+    border-bottom: 2px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    padding-left: 10px;
+}
+
+/* BARS */
+.barContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    width: 60px;
 }
 
 .bar {
-    height: 25px;
+    width: 40px;
     background: gold;
-    width: 0%;
-    transition: width 0.5s;
-    border-radius: 8px;
-    box-shadow: 0 0 10px gold;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 0 12px gold;
+    transition: height 0.5s;
 }
 
-/* WINNER PANEL */
+/* X AXIS LABELS */
+.xLabel {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* WIN PANEL */
 #winPanel {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     padding: 40px;
     border-radius: 20px;
     display: none;
     text-align: center;
-    font-size: 22px;
     box-shadow: 0 0 20px gold;
+    font-size: 22px;
 }
 </style>
 </head>
+
 <body>
 
 <div id="menu">
@@ -105,7 +133,7 @@ button:hover {
     <input id="name" placeholder="Name">
     <input id="votes" type="number" placeholder="Ziel Votes">
 
-    <input id="time" type="number" placeholder="Sekunden pro Vote (z.B. 3)" value="3">
+    <input id="time" type="number" value="3" placeholder="Sekunden pro Vote">
 
     <button onclick="add()">Hinzufügen</button>
     <button onclick="start()">Play</button>
@@ -113,7 +141,12 @@ button:hover {
     <div id="list"></div>
 </div>
 
-<div id="chartContainer"></div>
+<div id="chartWrapper">
+    <div id="chartArea">
+        <div id="yAxis"></div>
+        <div id="chart"></div>
+    </div>
+</div>
 
 <div id="winPanel"></div>
 
@@ -137,7 +170,7 @@ function renderList() {
     data.forEach((d, i) => {
         let div = document.createElement("div");
         div.className = "item";
-        div.innerHTML = d.name + " (" + d.votes + ")";
+        div.innerText = d.name + " (" + d.votes + ")";
         div.onclick = () => {
             data.splice(i, 1);
             renderList();
@@ -150,47 +183,61 @@ function start() {
     if (data.length === 0) return;
 
     document.getElementById("menu").style.display = "none";
-    document.getElementById("chartContainer").style.display = "block";
+    document.getElementById("chartWrapper").style.display = "block";
 
-    renderChart();
+    let maxVotes = Math.max(...data.map(d => d.votes));
+
+    renderChart(maxVotes);
 
     let interval = parseInt(document.getElementById("time").value) * 1000;
 
     let timer = setInterval(() => {
+
         data.forEach(d => {
             if (d.current < d.votes) d.current++;
         });
 
-        renderChart();
+        renderChart(maxVotes);
 
         if (data.every(d => d.current >= d.votes)) {
             clearInterval(timer);
             showWinner();
         }
+
     }, interval);
 }
 
-function renderChart() {
-    let container = document.getElementById("chartContainer");
-    container.innerHTML = "";
+function renderChart(maxVotes) {
+    let yAxis = document.getElementById("yAxis");
+    let chart = document.getElementById("chart");
+
+    yAxis.innerHTML = "";
+    chart.innerHTML = "";
 
     data.forEach(d => {
-        let row = document.createElement("div");
-        row.className = "barRow";
 
-        let name = document.createElement("div");
-        name.className = "name";
-        name.innerText = d.name;
+        let y = document.createElement("div");
+        y.className = "yItem";
+        y.innerText = d.name;
+        yAxis.appendChild(y);
+
+        let container = document.createElement("div");
+        container.className = "barContainer";
 
         let bar = document.createElement("div");
         bar.className = "bar";
 
-        let percent = (d.current / d.votes) * 100;
-        bar.style.width = percent + "%";
+        let height = (d.current / maxVotes) * 350;
+        bar.style.height = height + "px";
 
-        row.appendChild(name);
-        row.appendChild(bar);
-        container.appendChild(row);
+        let label = document.createElement("div");
+        label.className = "xLabel";
+        label.innerText = d.current;
+
+        container.appendChild(bar);
+        container.appendChild(label);
+
+        chart.appendChild(container);
     });
 }
 
@@ -198,12 +245,10 @@ function showWinner() {
     let winner = data.reduce((a,b) => a.current > b.current ? a : b);
 
     let panel = document.getElementById("winPanel");
-    panel.innerHTML = "🏆 Gewinner: <br><b>" + winner.name + "</b>";
+    panel.innerHTML = "🏆 Gewinner:<br><b>" + winner.name + "</b>";
     panel.style.display = "block";
 
-    setTimeout(() => {
-        location.reload();
-    }, 5000);
+    setTimeout(() => location.reload(), 5000);
 }
 </script>
 
