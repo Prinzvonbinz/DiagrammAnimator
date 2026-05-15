@@ -2,123 +2,141 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Animiertes Voting Diagramm</title>
+<title>Golden Voting Chart</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-    body {
-        margin: 0;
-        font-family: Poppins, sans-serif;
-        background: linear-gradient(135deg, #3b1f1f, #7a2e1e, #b08d57);
-        color: white;
-        overflow: hidden;
-    }
+body {
+    margin: 0;
+    font-family: Poppins, sans-serif;
+    background: radial-gradient(circle at top, #4a1f17, #2a0f0b 55%, #120705);
+    color: #fff;
+    overflow: hidden;
+}
 
-    h1 {
-        font-family: "Playfair Display", serif;
-        font-size: 42px;
-        margin-bottom: 10px;
-    }
+/* ===== MENU ===== */
+#menu {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
 
-    #menu, #game {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
+h1 {
+    font-family: "Playfair Display", serif;
+    font-size: 52px;
+    color: gold;
+    text-shadow: 0 0 18px rgba(255,215,0,0.3);
+}
 
-    #menu {
-        gap: 12px;
-    }
+input {
+    width: 240px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+}
 
-    input, button {
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-    }
+button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(145deg, #d4af37, #8b6b1f);
+    font-weight: 600;
+    color: black;
+    transition: 0.2s;
+}
 
-    input {
-        width: 200px;
-    }
+button:hover {
+    transform: scale(1.05);
+}
 
-    button {
-        cursor: pointer;
-        background: gold;
-        color: black;
-        font-weight: bold;
-    }
+/* LIST */
+#list {
+    width: 260px;
+    margin-top: 10px;
+}
 
-    button:hover {
-        transform: scale(1.05);
-    }
+.item {
+    background: rgba(255,255,255,0.08);
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+}
 
-    #list {
-        margin-top: 10px;
-        max-height: 150px;
-        overflow-y: auto;
-        width: 250px;
-    }
+.item:hover {
+    background: rgba(255,215,0,0.15);
+}
 
-    .item {
-        background: rgba(255,255,255,0.15);
-        margin: 5px;
-        padding: 6px;
-        border-radius: 6px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-    }
+/* ===== GAME ===== */
+#game {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 80px;
+}
 
-    #chart {
-        display: flex;
-        align-items: flex-end;
-        gap: 25px;
-        height: 60%;
-        width: 80%;
-        justify-content: center;
-    }
+#chart {
+    display: flex;
+    gap: 35px;
+    align-items: flex-end;
+    height: 70%;
+}
 
-    .bar-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 60px;
-    }
+/* BAR */
+.barWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+}
 
-    .bar {
-        width: 40px;
-        background: linear-gradient(to top, gold, #ffd700);
-        border-radius: 8px 8px 0 0;
-        transition: height 0.4s ease;
-        box-shadow: 0 0 10px rgba(255,215,0,0.5);
-    }
+.bar {
+    width: 50px;
+    height: 0px;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(to top, #b8860b, gold);
+    box-shadow: 0 0 18px rgba(255,215,0,0.25);
+    transition: height 0.35s ease;
+}
 
-    .label {
-        margin-top: 8px;
-        font-size: 14px;
-    }
+.label {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #f5e6c8;
+}
 
-    #winner {
-        position: absolute;
-        display: none;
-        background: rgba(0,0,0,0.7);
-        width: 100%;
-        height: 100%;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        font-size: 32px;
-    }
+/* WINNER */
+#winner {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.75);
+}
 
-    #trophy {
-        font-size: 80px;
-    }
+#winnerBox {
+    background: radial-gradient(circle, #3a1a13, #120705);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 25px gold;
+}
 
+#trophy {
+    font-size: 80px;
+}
 </style>
 </head>
 
@@ -126,135 +144,157 @@
 
 <!-- MENU -->
 <div id="menu">
-    <h1>Voting Simulator</h1>
+    <h1>Voting Arena</h1>
 
     <input id="name" placeholder="Name">
-    <input id="votes" type="number" placeholder="Votes">
+    <input id="votes" type="number" placeholder="Ziel-Votes">
 
-    <button onclick="addItem()">Hinzufügen</button>
+    <button onclick="add()">Hinzufügen</button>
 
     <div id="list"></div>
 
-    <input id="speed" type="number" placeholder="Sekunden pro Vote" value="2">
+    <input id="speed" type="number" value="2" placeholder="Sekunden pro Vote">
 
     <button onclick="start()">Play</button>
 </div>
 
 <!-- GAME -->
-<div id="game" style="display:none;">
+<div id="game">
     <div id="chart"></div>
 </div>
 
-<!-- WINNER -->
+<!-- WIN -->
 <div id="winner">
-    <div id="trophy">🏆</div>
-    <div id="winnerText"></div>
+    <div id="winnerBox">
+        <div id="trophy">🏆</div>
+        <h2 id="winnerText"></h2>
+    </div>
 </div>
 
 <script>
-let items = [];
+
+let data = [];
 let progress = {};
-let interval;
+let timer = null;
 
-function addItem() {
-    const name = document.getElementById("name").value;
-    const votes = parseInt(document.getElementById("votes").value);
+/* ===== ADD ===== */
+function add() {
+    const n = document.getElementById("name");
+    const v = document.getElementById("votes");
 
-    if(!name || isNaN(votes)) return;
+    if(!n.value || !v.value) return;
 
-    items.push({name, votes});
+    data.push({
+        name: n.value,
+        target: parseInt(v.value)
+    });
+
+    n.value = "";
+    v.value = "";
+
     renderList();
 }
 
+/* ===== LIST ===== */
 function renderList() {
     const list = document.getElementById("list");
     list.innerHTML = "";
 
-    items.forEach((item, i) => {
+    data.forEach((d, i) => {
         const div = document.createElement("div");
         div.className = "item";
-        div.innerHTML = `${item.name} (${item.votes})`;
+        div.innerHTML = `${d.name} → ${d.target}`;
+
         div.onclick = () => {
-            items.splice(i, 1);
+            data.splice(i, 1);
             renderList();
         };
+
         list.appendChild(div);
     });
 }
 
+/* ===== START ===== */
 function start() {
-    if(items.length === 0) return;
+    if(data.length === 0) return;
 
     document.getElementById("menu").style.display = "none";
     document.getElementById("game").style.display = "flex";
 
-    const speed = parseInt(document.getElementById("speed").value) * 1000;
-
     progress = {};
-    items.forEach(i => progress[i.name] = 0);
+    data.forEach(d => progress[d.name] = 0);
 
-    renderChart();
+    draw();
 
-    interval = setInterval(() => {
+    const speed = parseFloat(document.getElementById("speed").value) * 1000;
+
+    timer = setInterval(() => {
+
         let done = true;
 
-        items.forEach(i => {
-            if(progress[i.name] < i.votes) {
-                progress[i.name]++;
+        data.forEach(d => {
+            if(progress[d.name] < d.target) {
+                progress[d.name]++;
                 done = false;
             }
         });
 
-        renderChart();
+        draw();
 
         if(done) {
-            clearInterval(interval);
+            clearInterval(timer);
             showWinner();
         }
 
     }, speed);
 }
 
-function renderChart() {
+/* ===== DRAW CHART ===== */
+function draw() {
     const chart = document.getElementById("chart");
     chart.innerHTML = "";
 
-    items.forEach(i => {
-        const container = document.createElement("div");
-        container.className = "bar-container";
+    data.forEach(d => {
+
+        const wrap = document.createElement("div");
+        wrap.className = "barWrap";
 
         const bar = document.createElement("div");
         bar.className = "bar";
-        bar.style.height = (progress[i.name] * 10) + "px";
+
+        const percent = (progress[d.name] / d.target);
+        const height = Math.max(0, Math.min(100, percent * 300));
+
+        bar.style.height = height + "px";
 
         const label = document.createElement("div");
         label.className = "label";
-        label.innerText = i.name;
+        label.innerText = d.name;
 
-        container.appendChild(bar);
-        container.appendChild(label);
-        chart.appendChild(container);
+        wrap.appendChild(bar);
+        wrap.appendChild(label);
+
+        chart.appendChild(wrap);
     });
 }
 
+/* ===== WINNER ===== */
 function showWinner() {
-    let winner = items[0];
 
-    items.forEach(i => {
-        if(i.votes > winner.votes) winner = i;
+    let winner = data[0];
+
+    data.forEach(d => {
+        if(d.target > winner.target) winner = d;
     });
 
-    const win = document.getElementById("winner");
     document.getElementById("winnerText").innerText = winner.name;
-
-    win.style.display = "flex";
+    document.getElementById("winner").style.display = "flex";
 
     setTimeout(() => {
-        win.style.display = "none";
-        document.getElementById("menu").style.display = "flex";
-        document.getElementById("game").style.display = "none";
+        location.reload();
     }, 5000);
 }
+
 </script>
 
 </body>
