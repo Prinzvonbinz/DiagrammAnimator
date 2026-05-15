@@ -2,299 +2,209 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Golden Voting Chart</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+<title>Animiertes Voting Diagramm</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
+
 body {
     margin: 0;
-    font-family: Poppins, sans-serif;
-    background: radial-gradient(circle at top, #4a1f17, #2a0f0b 55%, #120705);
-    color: #fff;
-    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #3b1f1f, #7a4a1c, #b08d2a);
+    color: white;
+    overflow-x: hidden;
 }
 
-/* ===== MENU ===== */
+/* STARTMENÜ */
 #menu {
-    position: absolute;
-    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
+    padding-top: 40px;
 }
 
-h1 {
-    font-family: "Playfair Display", serif;
-    font-size: 52px;
-    color: gold;
-    text-shadow: 0 0 18px rgba(255,215,0,0.3);
-}
-
-input {
-    width: 240px;
+input, button {
     padding: 10px;
+    margin: 5px;
     border-radius: 10px;
     border: none;
-    outline: none;
+    font-size: 16px;
 }
 
 button {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: none;
     cursor: pointer;
-    background: linear-gradient(145deg, #d4af37, #8b6b1f);
-    font-weight: 600;
+    background: gold;
     color: black;
-    transition: 0.2s;
+    font-weight: bold;
 }
 
 button:hover {
     transform: scale(1.05);
 }
 
-/* LIST */
 #list {
-    width: 260px;
-    margin-top: 10px;
+    margin-top: 20px;
+    width: 300px;
 }
 
 .item {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.1);
     padding: 8px;
-    margin: 5px 0;
+    margin: 5px;
     border-radius: 8px;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
-    cursor: pointer;
 }
 
-.item:hover {
-    background: rgba(255,215,0,0.15);
-}
-
-/* ===== GAME ===== */
-#game {
+/* DIAGRAMM */
+#chartContainer {
     display: none;
-    position: absolute;
-    inset: 0;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 80px;
+    padding: 20px;
 }
 
-#chart {
+.barRow {
     display: flex;
-    gap: 35px;
-    align-items: flex-end;
-    height: 70%;
-}
-
-/* BAR */
-.barWrap {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    width: 80px;
+    margin: 10px 0;
+}
+
+.name {
+    width: 120px;
 }
 
 .bar {
-    width: 50px;
-    height: 0px;
-    border-radius: 10px 10px 0 0;
-    background: linear-gradient(to top, #b8860b, gold);
-    box-shadow: 0 0 18px rgba(255,215,0,0.25);
-    transition: height 0.35s ease;
+    height: 25px;
+    background: gold;
+    width: 0%;
+    transition: width 0.5s;
+    border-radius: 8px;
+    box-shadow: 0 0 10px gold;
 }
 
-.label {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #f5e6c8;
-}
-
-/* WINNER */
-#winner {
-    position: absolute;
-    inset: 0;
+/* WINNER PANEL */
+#winPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    padding: 40px;
+    border-radius: 20px;
     display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.75);
-}
-
-#winnerBox {
-    background: radial-gradient(circle, #3a1a13, #120705);
-    padding: 30px;
-    border-radius: 15px;
     text-align: center;
-    box-shadow: 0 0 25px gold;
-}
-
-#trophy {
-    font-size: 80px;
+    font-size: 22px;
+    box-shadow: 0 0 20px gold;
 }
 </style>
 </head>
-
 <body>
 
-<!-- MENU -->
 <div id="menu">
-    <h1>Voting Arena</h1>
+    <h1>Voting Simulator</h1>
 
     <input id="name" placeholder="Name">
-    <input id="votes" type="number" placeholder="Ziel-Votes">
+    <input id="votes" type="number" placeholder="Ziel Votes">
+
+    <input id="time" type="number" placeholder="Sekunden pro Vote (z.B. 3)" value="3">
 
     <button onclick="add()">Hinzufügen</button>
+    <button onclick="start()">Play</button>
 
     <div id="list"></div>
-
-    <input id="speed" type="number" value="2" placeholder="Sekunden pro Vote">
-
-    <button onclick="start()">Play</button>
 </div>
 
-<!-- GAME -->
-<div id="game">
-    <div id="chart"></div>
-</div>
+<div id="chartContainer"></div>
 
-<!-- WIN -->
-<div id="winner">
-    <div id="winnerBox">
-        <div id="trophy">🏆</div>
-        <h2 id="winnerText"></h2>
-    </div>
-</div>
+<div id="winPanel"></div>
 
 <script>
-
 let data = [];
-let progress = {};
-let timer = null;
 
-/* ===== ADD ===== */
 function add() {
-    const n = document.getElementById("name");
-    const v = document.getElementById("votes");
+    let name = document.getElementById("name").value;
+    let votes = parseInt(document.getElementById("votes").value);
 
-    if(!n.value || !v.value) return;
+    if (!name || isNaN(votes)) return;
 
-    data.push({
-        name: n.value,
-        target: parseInt(v.value)
-    });
-
-    n.value = "";
-    v.value = "";
-
+    data.push({ name, votes, current: 0 });
     renderList();
 }
 
-/* ===== LIST ===== */
 function renderList() {
-    const list = document.getElementById("list");
+    let list = document.getElementById("list");
     list.innerHTML = "";
 
     data.forEach((d, i) => {
-        const div = document.createElement("div");
+        let div = document.createElement("div");
         div.className = "item";
-        div.innerHTML = `${d.name} → ${d.target}`;
-
+        div.innerHTML = d.name + " (" + d.votes + ")";
         div.onclick = () => {
             data.splice(i, 1);
             renderList();
         };
-
         list.appendChild(div);
     });
 }
 
-/* ===== START ===== */
 function start() {
-    if(data.length === 0) return;
+    if (data.length === 0) return;
 
     document.getElementById("menu").style.display = "none";
-    document.getElementById("game").style.display = "flex";
+    document.getElementById("chartContainer").style.display = "block";
 
-    progress = {};
-    data.forEach(d => progress[d.name] = 0);
+    renderChart();
 
-    draw();
+    let interval = parseInt(document.getElementById("time").value) * 1000;
 
-    const speed = parseFloat(document.getElementById("speed").value) * 1000;
-
-    timer = setInterval(() => {
-
-        let done = true;
-
+    let timer = setInterval(() => {
         data.forEach(d => {
-            if(progress[d.name] < d.target) {
-                progress[d.name]++;
-                done = false;
-            }
+            if (d.current < d.votes) d.current++;
         });
 
-        draw();
+        renderChart();
 
-        if(done) {
+        if (data.every(d => d.current >= d.votes)) {
             clearInterval(timer);
             showWinner();
         }
-
-    }, speed);
+    }, interval);
 }
 
-/* ===== DRAW CHART ===== */
-function draw() {
-    const chart = document.getElementById("chart");
-    chart.innerHTML = "";
+function renderChart() {
+    let container = document.getElementById("chartContainer");
+    container.innerHTML = "";
 
     data.forEach(d => {
+        let row = document.createElement("div");
+        row.className = "barRow";
 
-        const wrap = document.createElement("div");
-        wrap.className = "barWrap";
+        let name = document.createElement("div");
+        name.className = "name";
+        name.innerText = d.name;
 
-        const bar = document.createElement("div");
+        let bar = document.createElement("div");
         bar.className = "bar";
 
-        const percent = (progress[d.name] / d.target);
-        const height = Math.max(0, Math.min(100, percent * 300));
+        let percent = (d.current / d.votes) * 100;
+        bar.style.width = percent + "%";
 
-        bar.style.height = height + "px";
-
-        const label = document.createElement("div");
-        label.className = "label";
-        label.innerText = d.name;
-
-        wrap.appendChild(bar);
-        wrap.appendChild(label);
-
-        chart.appendChild(wrap);
+        row.appendChild(name);
+        row.appendChild(bar);
+        container.appendChild(row);
     });
 }
 
-/* ===== WINNER ===== */
 function showWinner() {
+    let winner = data.reduce((a,b) => a.current > b.current ? a : b);
 
-    let winner = data[0];
-
-    data.forEach(d => {
-        if(d.target > winner.target) winner = d;
-    });
-
-    document.getElementById("winnerText").innerText = winner.name;
-    document.getElementById("winner").style.display = "flex";
+    let panel = document.getElementById("winPanel");
+    panel.innerHTML = "🏆 Gewinner: <br><b>" + winner.name + "</b>";
+    panel.style.display = "block";
 
     setTimeout(() => {
         location.reload();
     }, 5000);
 }
-
 </script>
 
 </body>
