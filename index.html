@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Animiertes Voting Diagramm</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        font-family: Poppins, sans-serif;
+        background: linear-gradient(135deg, #3b1f1f, #7a2e1e, #b08d57);
+        color: white;
+        overflow: hidden;
+    }
+
+    h1 {
+        font-family: "Playfair Display", serif;
+        font-size: 42px;
+        margin-bottom: 10px;
+    }
+
+    #menu, #game {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    #menu {
+        gap: 12px;
+    }
+
+    input, button {
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+    }
+
+    input {
+        width: 200px;
+    }
+
+    button {
+        cursor: pointer;
+        background: gold;
+        color: black;
+        font-weight: bold;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+    }
+
+    #list {
+        margin-top: 10px;
+        max-height: 150px;
+        overflow-y: auto;
+        width: 250px;
+    }
+
+    .item {
+        background: rgba(255,255,255,0.15);
+        margin: 5px;
+        padding: 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 25px;
+        height: 60%;
+        width: 80%;
+        justify-content: center;
+    }
+
+    .bar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 60px;
+    }
+
+    .bar {
+        width: 40px;
+        background: linear-gradient(to top, gold, #ffd700);
+        border-radius: 8px 8px 0 0;
+        transition: height 0.4s ease;
+        box-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+
+    .label {
+        margin-top: 8px;
+        font-size: 14px;
+    }
+
+    #winner {
+        position: absolute;
+        display: none;
+        background: rgba(0,0,0,0.7);
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        font-size: 32px;
+    }
+
+    #trophy {
+        font-size: 80px;
+    }
+
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+<div id="menu">
+    <h1>Voting Simulator</h1>
+
+    <input id="name" placeholder="Name">
+    <input id="votes" type="number" placeholder="Votes">
+
+    <button onclick="addItem()">Hinzufügen</button>
+
+    <div id="list"></div>
+
+    <input id="speed" type="number" placeholder="Sekunden pro Vote" value="2">
+
+    <button onclick="start()">Play</button>
+</div>
+
+<!-- GAME -->
+<div id="game" style="display:none;">
+    <div id="chart"></div>
+</div>
+
+<!-- WINNER -->
+<div id="winner">
+    <div id="trophy">🏆</div>
+    <div id="winnerText"></div>
+</div>
+
+<script>
+let items = [];
+let progress = {};
+let interval;
+
+function addItem() {
+    const name = document.getElementById("name").value;
+    const votes = parseInt(document.getElementById("votes").value);
+
+    if(!name || isNaN(votes)) return;
+
+    items.push({name, votes});
+    renderList();
+}
+
+function renderList() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    items.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `${item.name} (${item.votes})`;
+        div.onclick = () => {
+            items.splice(i, 1);
+            renderList();
+        };
+        list.appendChild(div);
+    });
+}
+
+function start() {
+    if(items.length === 0) return;
+
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "flex";
+
+    const speed = parseInt(document.getElementById("speed").value) * 1000;
+
+    progress = {};
+    items.forEach(i => progress[i.name] = 0);
+
+    renderChart();
+
+    interval = setInterval(() => {
+        let done = true;
+
+        items.forEach(i => {
+            if(progress[i.name] < i.votes) {
+                progress[i.name]++;
+                done = false;
+            }
+        });
+
+        renderChart();
+
+        if(done) {
+            clearInterval(interval);
+            showWinner();
+        }
+
+    }, speed);
+}
+
+function renderChart() {
+    const chart = document.getElementById("chart");
+    chart.innerHTML = "";
+
+    items.forEach(i => {
+        const container = document.createElement("div");
+        container.className = "bar-container";
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = (progress[i.name] * 10) + "px";
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.innerText = i.name;
+
+        container.appendChild(bar);
+        container.appendChild(label);
+        chart.appendChild(container);
+    });
+}
+
+function showWinner() {
+    let winner = items[0];
+
+    items.forEach(i => {
+        if(i.votes > winner.votes) winner = i;
+    });
+
+    const win = document.getElementById("winner");
+    document.getElementById("winnerText").innerText = winner.name;
+
+    win.style.display = "flex";
+
+    setTimeout(() => {
+        win.style.display = "none";
+        document.getElementById("menu").style.display = "flex";
+        document.getElementById("game").style.display = "none";
+    }, 5000);
+}
+</script>
+
+</body>
+</html>
