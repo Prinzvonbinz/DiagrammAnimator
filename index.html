@@ -59,21 +59,19 @@ button {
     display: flex;
 }
 
-/* Y AXIS (NAMES) */
+/* Y AXIS */
 #yAxis {
-    width: 140px;
-}
-
-.yItem {
-    height: 30px;
+    width: 60px;
+    height: 400px;
     display: flex;
-    align-items: flex-end;
-    margin: 5px 0;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 12px;
+    opacity: 0.8;
 }
 
-/* CHART GRID */
+/* CHART */
 #chart {
-    position: relative;
     flex: 1;
     height: 400px;
     border-left: 2px solid rgba(255,255,255,0.4);
@@ -84,14 +82,14 @@ button {
     padding-left: 10px;
 }
 
-/* BARS */
+/* BAR */
 .barContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
     height: 100%;
-    width: 60px;
+    width: 70px;
 }
 
 .bar {
@@ -102,10 +100,10 @@ button {
     transition: height 0.5s;
 }
 
-/* X AXIS LABELS */
-.xLabel {
+/* NAME UNDER BAR */
+.nameLabel {
+    margin-top: 6px;
     font-size: 12px;
-    margin-top: 5px;
 }
 
 /* WIN PANEL */
@@ -132,7 +130,6 @@ button {
 
     <input id="name" placeholder="Name">
     <input id="votes" type="number" placeholder="Ziel Votes">
-
     <input id="time" type="number" value="3" placeholder="Sekunden pro Vote">
 
     <button onclick="add()">Hinzufügen</button>
@@ -208,18 +205,20 @@ function start() {
 }
 
 function renderChart(maxVotes) {
-    let yAxis = document.getElementById("yAxis");
     let chart = document.getElementById("chart");
+    let yAxis = document.getElementById("yAxis");
 
-    yAxis.innerHTML = "";
     chart.innerHTML = "";
+    yAxis.innerHTML = "";
+
+    // Y AXIS (0 bis maxVotes)
+    for (let i = maxVotes; i >= 0; i -= Math.ceil(maxVotes / 5)) {
+        let label = document.createElement("div");
+        label.innerText = i;
+        yAxis.appendChild(label);
+    }
 
     data.forEach(d => {
-
-        let y = document.createElement("div");
-        y.className = "yItem";
-        y.innerText = d.name;
-        yAxis.appendChild(y);
 
         let container = document.createElement("div");
         container.className = "barContainer";
@@ -230,12 +229,12 @@ function renderChart(maxVotes) {
         let height = (d.current / maxVotes) * 350;
         bar.style.height = height + "px";
 
-        let label = document.createElement("div");
-        label.className = "xLabel";
-        label.innerText = d.current;
+        let name = document.createElement("div");
+        name.className = "nameLabel";
+        name.innerText = d.name;
 
         container.appendChild(bar);
-        container.appendChild(label);
+        container.appendChild(name);
 
         chart.appendChild(container);
     });
